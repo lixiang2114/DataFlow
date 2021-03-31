@@ -2,31 +2,32 @@
 DataFlow是基于应用日志流程的一套分布式ETL系统服务组件，其前身是LogCollector2.0日志系统框架，自LogCollector3.0版本开始正式更名为DataFlow3.0。目前常用的ETL工具Flume、LogStash、Kettle、Sqoop等也可以完成日志的采集、传输、转换和存储；但这些工具都不具备事务一致性。比如Flume工具仅能应用到通信质量无障碍的局域网环境，在公网环境下可能因网络不稳定等因素导致连接远端服务的发送器组件失败，而此时收集器组件可能并不知情，数据仍然会继续传送到通道组件，这容易导致通道组件内存泄露从而引发OOM错误；另一方面由于通道错误导致实时收集的数据发送失败，收集器也没有记录实时检查点，这意味着发送失败的数据将面临丢失。发生所有这些问题的根源在于公网传递数据的不稳定性所致，因此Flume是一款仅能适用于云域内网的ETL工具。在这种问题背景的需求驱动下产生了DataFlow这款产品，DataFlow完全按照产品级标准使用JAVA语言进行开发，安装时无需再安装外置JDK支持，解压开箱即用。  
 ​      
       
+
 ### 产品功能特性  
 DataFlow是基于应用日志流程的一套ETL系统服务组件，同时适用于云域内网数据传送和跨云数据传送；同时支持多维流程和嵌套流程并发运行；同时支持Windows和Linux双系统平台；同时支持实时传送、离线传送和断点续传；同时支持组件化、服务化、扩展化和集成化；产品可一键安装、分布式部署，自动识别平台和系统环境并完成相应配置，无需任何附加操作，解压开箱即用。  
 ​      
 
 ### 同类产品对比  
-##### 1. LogCollector VS Kettle  
-Kettle框架不具备通过事务反馈达到数据一致性能力，LogCollector框架具备  
-Kettle框架不支持复杂嵌套子流程、不支持闭环流程，LogCollector框架具备  
+##### 1. DataFlow VS Kettle  
+Kettle框架不具备通过事务反馈达到数据一致性能力，DataFlow框架具备  
+Kettle框架不支持复杂嵌套子流程、不支持闭环流程，DataFlow框架具备  
 
-##### 2. LogCollector VS Flume：
-Flume框架不具备通过动态脚本定制规则的扩展功能，LogCollector框架具备  
-Flume框架不具备通过事务反馈达到数据一致性能力，LogCollector框架具备  
-Flume框架不支持复杂嵌套子流程、不支持闭环流程，LogCollector框架具备  
+##### 2. DataFlow VS Flume：
+Flume框架不具备通过动态脚本定制规则的扩展功能，DataFlow框架具备  
+Flume框架不具备通过事务反馈达到数据一致性能力，DataFlow框架具备  
+Flume框架不支持复杂嵌套子流程、不支持闭环流程，DataFlow框架具备  
 
-##### 3. LogCollector VS LogStash：
-LogStash框架不支持复杂嵌套子流程、不支持闭环流程，LogCollector框架具备  
-LogStash框架不具备通过动态脚本定制规则的扩展功能，LogCollector框架具备  
-LogStash框架不具备通过插件动态横向扩展功能的能力，LogCollector框架具备  
+##### 3. DataFlow VS LogStash：
+LogStash框架不支持复杂嵌套子流程、不支持闭环流程，DataFlow框架具备  
+LogStash框架不具备通过动态脚本定制规则的扩展功能，DataFlow框架具备  
+LogStash框架不具备通过插件动态横向扩展功能的能力，DataFlow框架具备  
 
-##### 4. LogCollector VS Sqoop：
-Sqoop框架不支持复杂多维流程、嵌套流程以及闭环流程，LogCollector框架具备  
-Sqoop框架不具备通过动态脚本定制过滤规则的扩展功能，LogCollector框架具备  
-Sqoop框架不具备通过插件动态横向扩展功能模块的能力，LogCollector框架具备  
-Sqoop框架不具备通过事务反馈回滚达到数据一致性能力，LogCollector框架具备  
-Sqoop框架不支持复杂嵌套子流程、不支持高级闭环流程，LogCollector框架具备  
+##### 4. DataFlow VS Sqoop：
+Sqoop框架不支持复杂多维流程、嵌套流程以及闭环流程，DataFlow框架具备  
+Sqoop框架不具备通过动态脚本定制过滤规则的扩展功能，DataFlow框架具备  
+Sqoop框架不具备通过插件动态横向扩展功能模块的能力，DataFlow框架具备  
+Sqoop框架不具备通过事务反馈回滚达到数据一致性能力，DataFlow框架具备  
+Sqoop框架不支持复杂嵌套子流程、不支持高级闭环流程，DataFlow框架具备  
 ​      
       
 
