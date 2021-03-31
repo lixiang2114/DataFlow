@@ -8,24 +8,24 @@ DataFlow是基于应用日志流程的一套ETL系统服务组件，同时适用
 
 ### 同类产品对比  
 ##### 1. LogCollector VS Kettle  
-Kettle框架不具备通过事务反馈达到数据一致性能力，LogCollector框架具备
-Kettle框架不支持复杂嵌套子流程、不支持闭环流程，LogCollector框架具备
+Kettle框架不具备通过事务反馈达到数据一致性能力，LogCollector框架具备  
+Kettle框架不支持复杂嵌套子流程、不支持闭环流程，LogCollector框架具备  
 
 ##### 2. LogCollector VS Flume：
-Flume框架不具备通过动态脚本定制规则的扩展功能，LogCollector框架具备
-Flume框架不具备通过事务反馈达到数据一致性能力，LogCollector框架具备
-Flume框架不支持复杂嵌套子流程、不支持闭环流程，LogCollector框架具备
+Flume框架不具备通过动态脚本定制规则的扩展功能，LogCollector框架具备  
+Flume框架不具备通过事务反馈达到数据一致性能力，LogCollector框架具备  
+Flume框架不支持复杂嵌套子流程、不支持闭环流程，LogCollector框架具备  
 
 ##### 3. LogCollector VS LogStash：
-LogStash框架不支持复杂嵌套子流程、不支持闭环流程，LogCollector框架具备
-LogStash框架不具备通过动态脚本定制规则的扩展功能，LogCollector框架具备
-LogStash框架不具备通过插件动态横向扩展功能的能力，LogCollector框架具备
+LogStash框架不支持复杂嵌套子流程、不支持闭环流程，LogCollector框架具备  
+LogStash框架不具备通过动态脚本定制规则的扩展功能，LogCollector框架具备  
+LogStash框架不具备通过插件动态横向扩展功能的能力，LogCollector框架具备  
 
 ##### 4. LogCollector VS Sqoop：
-Sqoop框架不支持复杂多维流程、嵌套流程以及闭环流程，LogCollector框架具备
-Sqoop框架不具备通过动态脚本定制过滤规则的扩展功能，LogCollector框架具备
-Sqoop框架不具备通过插件动态横向扩展功能模块的能力，LogCollector框架具备
-Sqoop框架不具备通过事务反馈回滚达到数据一致性能力，LogCollector框架具备
+Sqoop框架不支持复杂多维流程、嵌套流程以及闭环流程，LogCollector框架具备  
+Sqoop框架不具备通过动态脚本定制过滤规则的扩展功能，LogCollector框架具备  
+Sqoop框架不具备通过插件动态横向扩展功能模块的能力，LogCollector框架具备  
+Sqoop框架不具备通过事务反馈回滚达到数据一致性能力，LogCollector框架具备  
 Sqoop框架不支持复杂嵌套子流程、不支持高级闭环流程，LogCollector框架具备  
 ​      
       
