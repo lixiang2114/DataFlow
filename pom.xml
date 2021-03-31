@@ -1,0 +1,65 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.github.lixiang2114.flow</groupId>
+  <artifactId>DataFlow</artifactId>
+  <version>3.0</version>
+  <packaging>jar</packaging>
+  
+  <parent>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-parent</artifactId>
+	<version>2.1.15.RELEASE</version>
+  </parent>
+
+  <name>DataFlow</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+  	<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+  	<dependency>
+	  <groupId>org.springframework.boot</groupId>
+	  <artifactId>spring-boot-starter-web</artifactId>
+	  <scope>provided</scope>
+	</dependency>
+	<dependency>
+	  <groupId>com.sun.jdk</groupId>
+	  <artifactId>tools</artifactId>
+	  <version>1.8</version>
+	  <scope>provided</scope>
+	</dependency>
+	<dependency>
+	  <groupId>net.java.dev.jna</groupId>
+	  <artifactId>jna-platform</artifactId>
+	  <scope>provided</scope>
+	</dependency>
+	<dependency>
+		<groupId>com.auth0</groupId>
+		<artifactId>java-jwt</artifactId>
+		<version>3.5.0</version>
+		<scope>provided</scope>
+	</dependency> 
+  </dependencies>
+  
+  <build>
+	<plugins>
+		<plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+                <execution>
+                    <phase>compile</phase>
+                    <goals>
+                        <goal>jar-no-fork</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+	</plugins>
+  </build>
+</project>
