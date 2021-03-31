@@ -104,7 +104,7 @@ export PATH DATAFLOW_HOME
 |mqttTransfer|Mqtt服务实时转存器|用于实时读取Mqtt端口数据，并将其转存到本地目录或发送到下游通道|
 |fileTransfer|本地文件实时转存器|用于实时读取本地系统数据，并将其转存到本地目录或发送到下游通道|
 ##### 备注：  
-更多插件介绍请参考插件库：https://github.com/lixiang2114/LogCollector-Plugins
+更多插件介绍请参考插件库：https://github.com/lixiang2114/DataFlow-Plugins
 ​    
 ### 应用流程设计    
 #### 定义流程目录及配置文件  
