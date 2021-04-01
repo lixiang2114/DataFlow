@@ -33,7 +33,7 @@ Sqoop框架不支持复杂嵌套子流程、不支持高级闭环流程，DataFl
 
 ### 产品安装部署  
 1. 下载与安装  
-wget https://github.com/lixiang2114/Approval/raw/main/DatFlow-3.0.zip -P /install/zip/    
+wget https://github.com/lixiang2114/Approval/raw/main/DataFlow-3.0.zip -P /install/zip/    
 unzip /install/zip/DatFlow-3.0.zip -d /software/  
 ##### 备注：  
 本套产品支持在Windows系统上安装部署和使用，在Windows上的安装和Linux上的安装类同，都是解压即用模式，如：解压到D盘根目录可以执行： unzip DatFlow-3.0.zip -d  D:/software/  
@@ -164,7 +164,7 @@ flowList=fileToFile
 ```
 ##### 备注:  
 DataFlow依赖库可以从下面的地址下载:  
-wget https://github.com/lixiang2114/DataFlow/blob/main/target/DataFlow-3.0.jar  
+wget https://github.com/lixiang2114/DataFlow/raw/main/target/DataFlow-3.0.jar  
 ​    
 2. 编写插件接口实现类FileSink
 ```JAVA
