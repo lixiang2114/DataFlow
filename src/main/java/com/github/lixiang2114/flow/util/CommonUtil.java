@@ -1387,9 +1387,11 @@ public class CommonUtil {
 	 */
 	public static <R> R jsonStrToJava(String srcJson,Class<R> returnType) {
 		if(null==srcJson) return null;
+		
 		Object mapper=getObjectMapper();
 		if(null==mapper) return null;
-		Method targetMethod=findMethod(mapper.getClass(),"readValue",String.class,Class.class);
+		
+		Method targetMethod=getObjectMapperMethod("readValue");
 		if(null==targetMethod) return null;
 		
 		try {
@@ -1397,6 +1399,7 @@ public class CommonUtil {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		return null;
 	}
 	
@@ -1407,15 +1410,44 @@ public class CommonUtil {
 	 */
 	public static String javaToJsonStr(Object object) {
 		if(null==object) return null;
+		
 		Object mapper=getObjectMapper();
 		if(null==mapper) return null;
-		Method targetMethod=findMethod(mapper.getClass(),"writeValueAsString",Object.class);
+		
+		Method targetMethod=getObjectMapperMethod("writeValueAsString");
+		if(null==targetMethod) return null;
+		
 		try {
 			return (String)targetMethod.invoke(mapper, object);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		return null;
+	}
+	
+	/**
+	 * 获取ObjectMapper类中的方法
+	 * @param methodName 方法名
+	 * @return 方法对象
+	 */
+	public static Method getObjectMapperMethod(String methodName) {
+		if(null==methodName || (methodName=methodName.trim()).isEmpty()) return null;
+		Method method=ApplicationUtil.getBean(methodName,Method.class);
+		if(null!=method) return method;
+		
+		Object mapper=getObjectMapper();
+		if(null==mapper) return null;
+		
+		Method targetMethod=null;
+		if("readValue".equals(methodName)) {
+			targetMethod=findMethod(mapper.getClass(),"readValue",String.class,Class.class);
+		}else if("writeValueAsString".equals(methodName)) {
+			targetMethod=findMethod(mapper.getClass(),"writeValueAsString",Object.class);
+		}
+		
+		if(null!=targetMethod) ApplicationUtil.registerSingleton(methodName, targetMethod);
+		return targetMethod;
 	}
 	
 	/**
