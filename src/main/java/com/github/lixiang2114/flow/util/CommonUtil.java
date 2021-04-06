@@ -26,20 +26,17 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -635,29 +632,101 @@ public class CommonUtil {
 	}
 	
 	/**
+	 * 指定的参数字串是否为字典JSON
+	 * @param src 源串
+	 * @return 是否为非字典JSON
+	 */
+	public static boolean isNotDictJson(String src) {
+		if(null==src) return true;
+		if((src=src.trim()).isEmpty()) return true;
+		return !src.startsWith("{") || !src.endsWith("}");
+	}
+	
+	/**
+	 * 指定的参数字串是否为列表JSON
+	 * @param src 源串
+	 * @return 是否为非列表JSON
+	 */
+	public static boolean isNotListJson(String src) {
+		if(null==src) return true;
+		if((src=src.trim()).isEmpty()) return true;
+		return !src.startsWith("[") || !src.endsWith("]");
+	}
+	
+	/**
+	 * 指定的参数字串是否为JSON
+	 * @param src 源串
+	 * @return 是否为非JSON
+	 */
+	public static boolean isNotJson(String src) {
+		if(null==src) return true;
+		if((src=src.trim()).isEmpty()) return true;
+		return isNotDictJson(src) && isNotListJson(src);
+	}
+	
+	/**
+	 * 将JAVA对象转换为JSON对象
+	 * @param object JAVA对象
+	 * @return JSON对象
+	 */
+	public static Object toJSON(Object object) {
+    	if(null==object) return null;
+    	Class<?> type=object.getClass();
+    	if(char.class==type || Character.class==type) return object.toString();
+    	if(Date.class.isAssignableFrom(type)) return DateUtil.dateToString((Date)object);
+    	if(isBaseType(type) || isWrapType(type) || String.class.isAssignableFrom(type)) return object;
+    	if(Calendar.class.isAssignableFrom(type)) return DateUtil.calendarToString((Calendar)object);
+    	if(type.isArray()) {
+    		Object[] arr=new Object[Array.getLength(object)];
+    		for(int i=0;i<arr.length;arr[i]=toJSON(Array.get(object,i++)));
+    		return arr;
+    	}else if(Iterable.class.isAssignableFrom(type)) {
+    		ArrayList<Object> list=new ArrayList<Object>();
+    		for(Object ele:((Iterable)object)) list.add(toJSON(ele));
+    		return list;
+    	}else if(Map.class.isAssignableFrom(type)) {
+    		HashMap<String,Object> map=new HashMap<String,Object>();
+    		for(Entry<Object, Object> entry:((Map<Object, Object>)object).entrySet()){
+    			Object keyObj=entry.getKey();
+    			Object valueObj=entry.getValue();
+    			if(null==keyObj || null==valueObj) continue;
+    			String key=keyObj.toString().trim();
+        		if(key.isEmpty()) continue;
+        		map.put(key, toJSON(valueObj));
+    		}
+    		return map;
+    	}else{
+    		HashMap<String,Object> map=new HashMap<String,Object>();
+    		HashMap<String, Field> fieldDict=findFields(type);
+    		try{
+    			for(Entry<String, Field> entry:fieldDict.entrySet()){
+        			String fieldName=entry.getKey();
+        			Field field=entry.getValue();
+        			if(null==fieldName || null==field) continue;
+        			String key=fieldName.toString().trim();
+        			Object fieldValue=field.get(object);
+        			if(null==fieldValue || key.isEmpty()) continue;
+            		map.put(key, toJSON(fieldValue));
+        		}
+    		}catch(Exception e) {
+    			throw new RuntimeException(e);
+    		}
+    		return map;
+    	}
+    }
+	
+	/**
      * 将对象转换为字符串描述
      * @description 格式化Object类中的toString方法
      * @param object 对象
      * @return 字符串
      */
-    public static String toString(Object object){
-    	if(null==object) return null;
-    	Class<?> type=object.getClass();
-    	if(Date.class.isAssignableFrom(type)) return DateUtil.dateToString((Date)object);
-    	if(Calendar.class.isAssignableFrom(type)) return DateUtil.calendarToString((Calendar)object);
-    	if(isSimpleType(type)) return object.toString().trim();
-    	if(Iterable.class.isAssignableFrom(type)) {
-    		ArrayList<String> retList=new ArrayList<String>();
-    		((Iterable)object).forEach(obj->retList.add(toString(obj)));
-    		return retList.toString();
-    	}
-    	LinkedHashMap<String,String> retMap=new LinkedHashMap<String,String>();
-    	if(Map.class.isAssignableFrom(type)) {
-    		((Map)object).forEach((k,v)->retMap.put(toString(k), toString(v)));
-    		return retMap.toString();
-    	}
-    	toMap(object).forEach((k,v)->retMap.put(k, toString(v)));
-    	return retMap.toString();
+    public static String toString(Object object) {
+    	Object json=toJSON(object);
+    	if(null==json) return null;
+    	Class<?> jsonType=json.getClass();
+    	if(isSimpleType(jsonType)) return json.toString().trim();
+    	return javaToJsonStr(json).trim();
     }
 	
 	/**
@@ -1812,8 +1881,6 @@ public class CommonUtil {
     	if(null==keyType) keyType=Object.class;
     	Class<?> elementType=null==elementTypes||0==elementTypes.length?Object.class:elementTypes[0];
     	if(String.class.isAssignableFrom(returnType)){
-    		if(srcType.isArray()||Collection.class.isAssignableFrom(srcType)||Map.class.isAssignableFrom(srcType))
-    		return (R)javaToJsonStr(object);
             return (R)stringValue;
         }else if(isNumber(returnType)){
         	String parseValue=null;
@@ -1826,8 +1893,7 @@ public class CommonUtil {
         	}else{
         		throw new RuntimeException("array, collection, and compound types are not supported to convert numeric types!!!");
         	}
-        	Class<?> wrapType=getWrapType(returnType);
-        	 return (R)wrapType.getConstructor(String.class).newInstance(parseValue);
+        	 return (R)getWrapType(returnType).getConstructor(String.class).newInstance(parseValue);
         }else if(Date.class.isAssignableFrom(returnType)){
         	if(String.class.isAssignableFrom(srcType) || Date.class.isAssignableFrom(srcType)) {
         		return (R)DateUtil.stringToDate(stringValue, (Class<Date>)returnType);
@@ -1853,240 +1919,72 @@ public class CommonUtil {
         }else if(Character.class==returnType || char.class==returnType){
             return (R)Character.valueOf(stringValue.charAt(0));
         }else if(returnType.isArray()){
-        	Class<?> componentType=returnType.getComponentType();
-        	if(String.class.isAssignableFrom(srcType)) {
-        		Object[] array=null;
-        		if(stringValue.startsWith("[") && stringValue.endsWith("]")){
-        			array=jsonStrToJava(stringValue,Object[].class);
-        		}else{
-        			array=COMMA.split(stringValue);
-        		}
-        		Object newArray=Array.newInstance(componentType, array.length);
-        		for(int i=0;i<array.length;Array.set(newArray, i, objectToType(array[i],componentType,null)),i++);
-        		return (R)newArray;
-        	}else if(isNumber(componentType) && (Date.class.isAssignableFrom(srcType) || Calendar.class.isAssignableFrom(srcType))) {
-        		Calendar calendar=null;
-        		if(Calendar.class.isAssignableFrom(srcType)) {
-        			calendar=(Calendar)object;
-        		}else{
-        			calendar=DateUtil.dateToCalendar((Date)object);
-        		}
-        		Integer[] array=(Integer[])DateUtil.getCalendarFields(calendar, Integer.class);
-        		Object newArray=Array.newInstance(componentType, array.length);
-        		for(int i=0;i<array.length;Array.set(newArray, i, objectToType(array[i],componentType,null)),i++);
-        		return (R)newArray;
-        	}else if(isNumber(srcType) && isNumber(componentType)){
-        		Object newArray=Array.newInstance(componentType, 1);
-        		Array.set(newArray, 0, objectToType(object,componentType,null));
-        		return (R)newArray;
-        	}else if(srcType.isArray()){
-        		int len=Array.getLength(object);
-        		Object newArray=Array.newInstance(componentType, len);
-        		for(int i=0;i<len;Array.set(newArray, i, objectToType(Array.get(object, i),componentType,null)),i++);
-        		return (R)newArray;
-        	}else if(Collection.class.isAssignableFrom(srcType)){
-        		int i=0;
-        		Collection cols=(Collection)object;
-        		Object newArray=Array.newInstance(componentType, cols.size());
-        		for(Object ele:cols) Array.set(newArray, i++, objectToType(ele,componentType,null));
-        		return (R)newArray;
-        	}else{
-        		int i=0;
-        		Set set=null;
-        		if(Map.class.isAssignableFrom(srcType)){
-        			set=((Map)object).entrySet();
-        		}else{
-        			set=entityToMap(object).entrySet();
-        		}
-        		Object newArray=Array.newInstance(componentType, set.size());
-        		for(Object ele:set) Array.set(newArray, i++, objectToType(ele,componentType,null));
-        		return (R)newArray;
-        	}
-        }else if(Collection.class.isAssignableFrom(returnType)){
-        	Collection cols=null;
-        	if(!returnType.isInterface()){
-        		cols = (Collection)returnType.newInstance();
-        	}else if(returnType.isAssignableFrom(ArrayList.class)){
-        		cols=new ArrayList(); 
-        	}else if(returnType.isAssignableFrom(HashSet.class)){
-        		cols=new HashSet();
-        	}else if(returnType.isAssignableFrom(LinkedList.class)){
-        		cols=new LinkedList();
-        	}else{
-        		cols=new TreeSet();
+        	Object[] array= jsonStrToJava(stringValue,Object[].class);
+        	Class<?> compType=returnType.getComponentType();
+        	Object retArr=Array.newInstance(compType, array.length);
+        	for(int i=0;i<array.length;Array.set(retArr, i, objectToType(array[i],compType,null)),i++);
+        	return (R)retArr;
+        }else if(Iterable.class.isAssignableFrom(returnType)){
+        	Method addMethod=null;
+        	try{
+        		addMethod=returnType.getMethod("add", Object.class);
+        	}catch(Exception e) {
+        		throw new RuntimeException("Element  Must Be Type: java.util.Collection",e);
         	}
         	
-        	if(String.class.isAssignableFrom(srcType)) {
-        		Object[] array=null;
-        		if(stringValue.startsWith("[") && stringValue.endsWith("]")){
-        			array=jsonStrToJava(stringValue,Object[].class);
-        		}else{
-        			array=COMMA.split(stringValue);
-        		}
-        		cols.addAll(Arrays.asList(array));
-        		return (R)cols;
-        	}else if(Date.class.isAssignableFrom(srcType) || Calendar.class.isAssignableFrom(srcType)) {
-        		Calendar calendar=null;
-        		if(Calendar.class.isAssignableFrom(srcType)) {
-        			calendar=(Calendar)object;
-        		}else{
-        			calendar=DateUtil.dateToCalendar((Date)object);
-        		}
-        		Integer[] array=(Integer[])DateUtil.getCalendarFields(calendar, Integer.class);
-        		for(int i=0;i<array.length;cols.add(objectToType(array[i],elementType,null)),i++);
-        		return (R)cols;
-        	}else if(isNumber(srcType) && isNumber(elementType)){
-        		cols.add(objectToType(object,elementType,null));
-        		return (R)cols;
-        	}else if(srcType.isArray()){
-        		int len=Array.getLength(object);
-        		for(int i=0;i<len;cols.add(objectToType(Array.get(object, i),elementType,null)),i++);
-        		return (R)cols;
-        	}else if(Collection.class.isAssignableFrom(srcType)) {
-        		for(Object element:(Collection)object) cols.add(objectToType(element,elementType,null));
-        		return (R)cols;
+        	Object r=null;
+        	if(!returnType.isInterface()) {
+        		r=returnType.newInstance();
         	}else{
-        		Set set=null;
-        		if(Map.class.isAssignableFrom(srcType)){
-        			set=((Map)object).entrySet();
+        		if(List.class.isAssignableFrom(returnType)) {
+        			r=new ArrayList<E>();
+        		}else if(Set.class.isAssignableFrom(returnType)) {
+        			r=new HashSet<E>();
+        		}else if(Queue.class.isAssignableFrom(returnType)) {
+        			r=new LinkedBlockingQueue<E>();
         		}else{
-        			set=entityToMap(object).entrySet();
+        			throw new RuntimeException("Not Support Element Type: "+elementType.getName());
         		}
-        		cols.addAll(set);
-        		return (R)cols;
         	}
+        	
+        	Object[] array= jsonStrToJava(stringValue,Object[].class);
+    		for(int i=0;i<array.length;addMethod.invoke(r, objectToType(array[i++],elementType,null)));
+    		return (R)r;
         }else if(Map.class.isAssignableFrom(returnType)){
-        	Map map=null;
-        	if(!returnType.isInterface()){
-        		map=(Map)returnType.newInstance();
-        	}else if(returnType.isAssignableFrom(HashMap.class)){
-        		map=new HashMap();
-        	}else if(returnType.isAssignableFrom(TreeMap.class)){
-        		map=new TreeMap();
-        	}else if(returnType.isAssignableFrom(ConcurrentHashMap.class)){
-        		map=new ConcurrentHashMap();
-        	}else{
-        		map=new Hashtable();
+        	Method putMethod=null;
+        	try{
+        		putMethod=returnType.getMethod("put", Object.class,Object.class);
+        	}catch(Exception e) {
+        		throw new RuntimeException("Element  Must Be Type: java.util.Map",e);
         	}
         	
-        	if(String.class.isAssignableFrom(srcType)){
-        		Map srcMap=null;
-        		if(stringValue.startsWith("{") && stringValue.endsWith("}")){
-        			srcMap=jsonStrToJava(stringValue,Map.class);
-        		}else{
-        			String[] entrys=ELEMENT_SEPARATOR.split(stringValue);
-        			srcMap=new HashMap();
-        			for(String entry:entrys){
-        				String[] keyVal=KEYVAL_SEPARATOR.split(entry);
-        				if(keyVal.length<2) continue;
-        				srcMap.put(keyVal[0].trim(), keyVal[1].trim());
-        			}
-        		}
-        		for(Map.Entry entry:(Set<Map.Entry>)srcMap.entrySet())
-        		map.put(objectToType(entry.getKey(),keyType,null), objectToType(entry.getValue(),elementType,null));
-        		return (R)map;
-        	}else if(Date.class.isAssignableFrom(srcType) || Calendar.class.isAssignableFrom(srcType)) {
-        		Calendar calendar=null;
-        		if(Calendar.class.isAssignableFrom(srcType)) {
-        			calendar=(Calendar)object;
-        		}else{
-        			calendar=DateUtil.dateToCalendar((Date)object);
-        		}
-        		HashMap<String,Integer> tmpMap=DateUtil.getCalendarFields(calendar);
-        		for(Map.Entry<String, Integer> entry:tmpMap.entrySet())
-        		map.put(objectToType(entry.getKey(),keyType,null), objectToType(entry.getValue(),elementType,null));
-        		return (R)map;
-        	}else if(isNumber(srcType)){
-        		map.put(objectToType("number",keyType,null), objectToType(object,elementType,null));
-        		return (R)map;
-        	}else if(srcType.isArray()){
-        		int length=Array.getLength(object);
-        		if(0==length) return (R)map;
-        		Class<?> componentType=srcType.getComponentType();
-        		if(Map.Entry.class.isAssignableFrom(componentType)) {
-        			for(int i=0;i<length;i++){
-        				Map.Entry entry=(Map.Entry)Array.get(object, i);
-        				map.put(objectToType(entry.getKey(),keyType,null), objectToType(entry.getValue(),elementType,null));
-        			}
-        			return (R)map;
-        		}else{
-        			for(int i=0;i<length;map.put(objectToType(i,keyType,null), objectToType(Array.get(object, i),elementType,null)),i++);
-        			return (R)map;
-        		}
-        	}else if(Collection.class.isAssignableFrom(srcType)){
-        		Iterator iterator=((Collection)object).iterator();
-        		for(int i=0;iterator.hasNext();i++){
-        			Object tmpObj=iterator.next();
-        			if(!Map.Entry.class.isInstance(tmpObj)) {
-        				map.put(objectToType(i,keyType,null), objectToType(tmpObj,elementType,null));
-        				continue;
-        			}
-        			Map.Entry entry=(Map.Entry)tmpObj;
-    				map.put(objectToType(entry.getKey(),keyType,null), objectToType(entry.getValue(),elementType,null));
-        		}
-        		return (R)map;
-        	}else {
-        		Set entrys=null;
-        		if(Map.class.isAssignableFrom(srcType)){
-        			entrys=((Map)object).entrySet();
-        		}else{
-        			entrys=entityToMap(object).entrySet();
-        		}
-        		for(Object ele:entrys){
-        			Map.Entry entry=(Map.Entry)ele;
-        			map.put(objectToType(entry.getKey(),keyType,null), objectToType(entry.getValue(),elementType,null));
-        		}
-        		return (R)map;
-        	}
-        }else{
-        	if(String.class.isAssignableFrom(srcType)){
-        		return jsonStrToJava(stringValue,returnType);
-        	}else if(Date.class.isAssignableFrom(srcType) || Calendar.class.isAssignableFrom(srcType) || isNumber(srcType)){
-        		throw new RuntimeException("java.util.Date/java.util.Calendar/java.lang.Number cannot convert to entity type!!!");
-        	}else if(srcType.isArray()){
-        		Class<?> componentType=srcType.getComponentType();
-        		if(!Map.Entry.class.isAssignableFrom(componentType)){
-        			throw new RuntimeException("array to entity conversion is not supported unless the component type is Map.Entry!!!");
-        		}
-        		
-        		R r=returnType.newInstance();
-        		HashMap<String, Field> fieldDict=findFields(returnType);
-        		int len=Array.getLength(object);
-    			for(int i=0;i<len;i++){
-    				Map.Entry entry=(Map.Entry)Array.get(object, i);
-    				if(null==entry) continue;
-    				Object key=entry.getKey();
-    				if(null==key || String.class!=key.getClass()) continue;
-    				String fieldName=((String)key).trim();
-    				if(0==fieldName.length()) continue;
-    				Field field=fieldDict.get(fieldName);
-    				if(null==field) continue;
-    				field.set(r, objectToType(entry.getValue(),field.getType(),null));
-    			}
-    			return r;
-        	}else if(Collection.class.isAssignableFrom(srcType)){
-        		R r=returnType.newInstance();
-        		Iterator iterator=((Collection)object).iterator();
-        		HashMap<String, Field> fieldDict=findFields(returnType);
-        		while(iterator.hasNext()){
-        			Object tmpObj=iterator.next();
-        			if(null==tmpObj) continue;
-        			if(!Map.Entry.class.isInstance(tmpObj)) continue;
-        			Map.Entry entry=(Map.Entry)tmpObj;
-    				Object key=entry.getKey();
-    				if(null==key || String.class!=key.getClass()) continue;
-    				String fieldName=((String)key).trim();
-    				if(0==fieldName.length()) continue;
-    				Field field=fieldDict.get(fieldName);
-    				if(null==field) continue;
-    				field.set(r, objectToType(entry.getValue(),field.getType(),null));
-        		}
-        		return r;
-        	}else if(Map.class.isAssignableFrom(srcType)) {
-        		return mapToEntity((Map)object,returnType);
+        	Object r=null;
+        	if(!returnType.isInterface()) {
+        		r=returnType.newInstance();
         	}else{
-        		return entityToEntity(object,returnType);
+        		r=new HashMap<Object,E>();
         	}
+        	
+        	Map<Object,Object> map= jsonStrToJava(stringValue,Map.class);
+    		for(Map.Entry<Object, Object> entry:map.entrySet()){
+    			putMethod.invoke(r, objectToType(entry.getKey(),keyType,null),objectToType(entry.getValue(),elementType,null));
+    		}
+    		return (R)r;
+        }else{
+        	Map<Object,Object> map= jsonStrToJava(stringValue,Map.class);
+        	HashMap<String, Field> fieldDict=findFields(returnType);
+        	R r=returnType.newInstance();
+        	for(Map.Entry<Object, Object> entry:map.entrySet()){
+        		Object key=entry.getKey();
+        		Object value=entry.getValue();
+        		if(null==key || null==value) continue;
+        		String fieldName=key.toString().trim();
+        		if(fieldName.isEmpty()) continue;
+        		Field field=fieldDict.get(fieldName);
+        		if(null==field) continue;
+        		field.set(r, objectToType(value,field.getType(),null));
+    		}
+        	return (R)r;
         }
     }
 	
