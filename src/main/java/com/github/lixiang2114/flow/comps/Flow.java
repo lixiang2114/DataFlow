@@ -1,7 +1,6 @@
 package com.github.lixiang2114.flow.comps;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.lixiang2114.flow.plugins.face.ManualPlugin;
 import com.github.lixiang2114.flow.plugins.face.RealtimePlugin;
-import com.github.lixiang2114.flow.util.FileUtil;
 
 /**
  * @author Lixiang
@@ -127,7 +125,7 @@ public class Flow extends Comp{
 	 */
 	public ConcurrentHashMap<PluginType, Plugin> pluginDict=new ConcurrentHashMap<PluginType, Plugin>();
 	
-	public Flow(String flowName,Plugin sink,Plugin filter,Plugin source,Plugin transfer,boolean clearCache){
+	public Flow(String flowName,Plugin sink,Plugin filter,Plugin source,Plugin transfer){
 		super(CompType.flows,flowName);
 		if(RealtimePlugin.class.isAssignableFrom(source.bootClass)){
 			this.realTime=true;
@@ -141,52 +139,17 @@ public class Flow extends Comp{
 			this.realTime=false;
 		}
 		
+		hasTransfer=null==transfer?false:true;
+		
 		pluginDict.put(PluginType.sink, this.sink=sink);
 		pluginDict.put(PluginType.filter, this.filter=filter);
 		pluginDict.put(PluginType.source, this.source=source);
+		if(null!=transfer) pluginDict.put(PluginType.transfer, this.transfer=transfer);
 		
 		sinkPath=new File(super.compPath,sink.compName);
 		filterPath=new File(super.compPath,filter.compName);
 		sourcePath=new File(super.compPath,source.compName);
-		
-		if(clearCache){
-			log.info("clear ETL plugin cache for flow instance: {}...",flowName);
-			FileUtil.dropFile(new File(super.compPath,"share"));
-			FileUtil.dropFile(new File(super.compPath,sink.compName));
-			FileUtil.dropFile(new File(super.compPath,filter.compName));
-			FileUtil.dropFile(new File(super.compPath,source.compName));
-		}
-		
-		try {
-			log.info("create ETL instance for flow: {}...",flowName);
-			FileUtil.copyFile(sink.compPath, super.compPath);
-			FileUtil.copyFile(filter.compPath, super.compPath);
-			FileUtil.copyFile(source.compPath, super.compPath);
-			(sharePath=new File(super.compPath,"share")).mkdirs();
-			new File(sharePath,"buffer.log.0").createNewFile();
-		} catch (IOException e) {
-			log.error("copy ETL plugin instance directory to flow instance directory failure...",e);
-		}
-		
-		if(null==transfer){
-			hasTransfer=false;
-		}else{
-			hasTransfer=true;
-			pluginDict.put(PluginType.transfer, this.transfer=transfer);
-			transferPath=new File(super.compPath,transfer.compName);
-			
-			if(clearCache) {
-				log.info("clear transfer plugin cache for flow instance: {}...",flowName);
-				FileUtil.dropFile(new File(super.compPath,transfer.compName));
-			}
-			
-			try {
-				log.info("create transfer instance for flow: {}...",flowName);
-				FileUtil.copyFile(transfer.compPath, super.compPath);
-			} catch (IOException e) {
-				log.error("copy transfer plugin instance directory to flow instance directory failure...",e);
-			}
-		}
+		if(null!=transfer) transferPath=new File(super.compPath,transfer.compName);
 		
 		log.info("flowName:="+flowName+";sink="+sink+";filter="+filter+";source="+source+";transfer="+transfer+";realTime="+realTime);
 	}

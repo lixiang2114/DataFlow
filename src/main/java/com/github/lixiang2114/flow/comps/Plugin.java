@@ -64,8 +64,8 @@ public class Plugin extends Comp{
 				methodDict.put(method.getName(), method);
 			}
 		} catch (Exception e) {
-			log.error("bootClass oparation when plugin initing occur error:",e);
-			throw new RuntimeException(e);
+			log.error("plugin bootClass initing occur error:",e);
+			throw new RuntimeException("plugin bootClass initing occur error:",e);
 		}
 	}
 	
