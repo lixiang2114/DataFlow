@@ -8,8 +8,7 @@ DataFlow是基于应用数据流程的一套ETL系统服务组件，同时适用
 ​      
 
 ### 系统架构原理  
-数据流系统DataFlow由调度器、装载器、编译器和执行器等系统核心组件构建；同时结合可插拔的转存器（Transfer）、收集器（Source[Manual、Realtime]）、过滤器（Filter）和发送器（Sink）等插件实现功能和模块化扩展。  
-系统架构示意图如下：  
+数据流系统DataFlow由调度器、装载器、编译器和执行器等系统核心组件构建；同时结合可插拔的转存器（Transfer）、收集器（Source[Manual、Realtime]）、过滤器（Filter）和发送器（Sink）等插件实现功能和模块化扩展，系统架构示意图如下：  
 ​      
 ​      
 &#8203;
