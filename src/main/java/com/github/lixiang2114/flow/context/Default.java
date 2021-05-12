@@ -46,11 +46,6 @@ public class Default {
 	public static final String TRANSFER="fileTransfer";
 	
 	/**
-	 * 默认的ETL流程列表(多个流程名称间使用英文逗号分隔)
-	 */
-	public static final String FLOWS="fileToFile";
-
-	/**
 	 *  启动流程调度器(true:启动,false:停止)
 	 */
 	public static final String FLOW_SCHEDULER="true";

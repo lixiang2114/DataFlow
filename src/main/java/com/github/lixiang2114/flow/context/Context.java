@@ -1,6 +1,7 @@
 package com.github.lixiang2114.flow.context;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import com.github.lixiang2114.flow.comps.Channel;
 import com.github.lixiang2114.flow.comps.CompType;
@@ -324,23 +326,26 @@ public class Context {
 		flowsLoaded=false;
 		Properties contextConfig=PropertiesReader.getProperties("context.properties");
 		
-		String flowListStr=contextConfig.getProperty("flowList", Default.FLOWS).trim();
-		flowList=COMMA_REGEX.split(flowListStr.isEmpty()?Default.FLOWS:flowListStr);
-		for(int i=0;i<flowList.length;flowList[i]=flowList[i++].trim());
+		String flowListStr=contextConfig.getProperty("flowList", "").trim();
+		flowList=StringUtils.trimArrayElements(flowListStr.isEmpty()?new File(projectFile,"flows").list(new FilenameFilter(){
+			public boolean accept(File dir, String name) {
+				return new File(dir,name).isDirectory();
+			}
+		}):COMMA_REGEX.split(flowListStr));
 		
 		String coreThreadStr=contextConfig.getProperty("coreThreads","").trim();
 		coreThreads=coreThreadStr.isEmpty()?3*flowList.length:Integer.parseInt(coreThreadStr);
 		
-		String initOnStartStr=contextConfig.getProperty("initOnStart", Default.INIT_ON_START).trim();
+		String initOnStartStr=contextConfig.getProperty("initOnStart", "").trim();
 		initOnStart=Boolean.parseBoolean(initOnStartStr.isEmpty()?Default.INIT_ON_START:initOnStartStr);
 		
-		String checkPluginFaceStr=contextConfig.getProperty("checkPluginFace", Default.CHECK_PLUGIN_FACE).trim();
+		String checkPluginFaceStr=contextConfig.getProperty("checkPluginFace", "").trim();
 		checkPluginFace=Boolean.parseBoolean(checkPluginFaceStr.isEmpty()?Default.CHECK_PLUGIN_FACE:checkPluginFaceStr);
 		
-		String etlSchedulerIntervalStr=contextConfig.getProperty("etlSchedulerInterval", Default.ETL_SCHEDULER_INTERVAL).trim();
+		String etlSchedulerIntervalStr=contextConfig.getProperty("etlSchedulerInterval", "").trim();
 		etlSchedulerInterval=Long.parseLong(etlSchedulerIntervalStr.isEmpty()?Default.ETL_SCHEDULER_INTERVAL:etlSchedulerIntervalStr);
 		
-		String traSchedulerIntervalStr=contextConfig.getProperty("traSchedulerInterval", Default.TRA_SCHEDULER_INTERVAL).trim();
+		String traSchedulerIntervalStr=contextConfig.getProperty("traSchedulerInterval", "").trim();
 		traSchedulerInterval=Long.parseLong(traSchedulerIntervalStr.isEmpty()?Default.TRA_SCHEDULER_INTERVAL:traSchedulerIntervalStr);
 		
 		log.info(endTip);
